@@ -1,0 +1,6 @@
+TraceBench
+Copyright 2026 TraceBench contributors
+
+This distribution includes selected Terminal-Bench components from commit
+ad2c3471906ae31ec1f6c0186e5b0c1718b100f2.
+Their original Apache-2.0 license is preserved in terminal-bench/LICENSE.

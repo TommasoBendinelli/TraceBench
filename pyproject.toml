@@ -1,0 +1,66 @@
+[project]
+name = "tracebench"
+version = "1.0.0"
+description = "TraceBench evaluation, scoring, and paper-reproduction utilities."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "click>=8.1",
+    "dtaidistance>=2.3",
+    "fastparquet>=2026.3.0",
+    "jsonschema>=4.25",
+    "huggingface-hub>=0.34",
+    "matplotlib>=3.9",
+    "num2words>=0.5.14",
+    "numpy>=2.0",
+    "openai>=1.59.9",
+    "pandas>=2.2",
+    "polars>=1.36",
+    "psutil>=7.0",
+    "pyarrow>=21.0",
+    "pydantic>=2.10",
+    "python-dotenv>=1.0",
+    "ruptures>=1.1.10",
+    "scikit-learn>=1.6",
+    "scipy>=1.13",
+    "seaborn>=0.13",
+    "terminal-bench",
+    "tqdm>=4.67",
+    "tree-sitter>=0.25",
+    "tree-sitter-bash>=0.25",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4",
+    "pytest-timeout>=2.4",
+]
+[tool.uv.sources]
+terminal-bench = { path = "terminal-bench", editable = true }
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = [
+    "scripts",
+    "shared",
+    "shared.config",
+    "shared.interface",
+    "shared.schemas",
+    "workflows",
+    "workflows.metrics",
+    "workflows.rollout",
+    "workflows.trajectory",
+]
+
+[tool.setuptools.package-data]
+shared = [
+    "config/agents.json",
+    "platform.json",
+    "schemas/experiment_config.schema.json",
+    "schemas/model_record.schema.json",
+    "schemas/sample_manifest.schema.json",
+    "schemas/similarity_metrics.schema.json",
+]

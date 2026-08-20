@@ -1,0 +1,26 @@
+{
+  "codex": {
+    "name": "codex",
+    "npm_package": "@openai/codex@0.128",
+    "api_key_environment_variable": "OPENAI_API_KEY",
+    "default_tools": {}
+  },
+  "gemini-cli": {
+    "name": "gemini-cli",
+    "npm_package": "@google/gemini-cli@0.35.0",
+    "api_key_environment_variable": "GEMINI_API_KEY",
+    "default_tools": {}
+  },
+  "claude-code": {
+    "name": "claude-code",
+    "npm_package": "@anthropic-ai/claude-code@2.1.96",
+    "api_key_environment_variable": "ANTHROPIC_API_KEY",
+    "default_tools": {}
+  },
+  "opencode": {
+    "name": "opencode",
+    "npm_package": "opencode-ai",
+    "api_key_environment_variable": "OPENROUTER_API_KEY",
+    "default_tools": {}
+  }
+}

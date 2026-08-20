@@ -1,0 +1,15 @@
+.DS_Store
+.env
+.venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+*.egg-info/
+artifacts/
+data/
+run_configurations/
+tmp/
+terminal-bench/runs/
+terminal-bench/tasks_runtime/
+terminal-bench/.venv/

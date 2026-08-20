@@ -1,0 +1,43 @@
+{
+  "schema_version": 2,
+  "terminal_bench": {
+    "commit": "ad2c3471906ae31ec1f6c0186e5b0c1718b100f2",
+    "vendored": true
+  },
+  "dataset": {
+    "repo_id": "eth-siplab/tracebench",
+    "revision": "ec08d06b0731315a188bc723e668ab68234da029",
+    "release_manifest_sha256": "be442186f975b3c5ac63b27616ee5ccbc0eb1c164eb0ba3cd0223aa165cf3816",
+    "results_csv_sha256": "7d9db47d4937589b4e8ea0060498752ae5a0e6ae96a605446bfeb974cd6d11de",
+    "results_parquet_sha256": "219eff73f42080cc05009a37fa74176cdb519d26c165edd061af6806d41522e9",
+    "expected_rows": 420,
+    "expected_columns": 47,
+    "expected_rows_by_tag": {
+      "CALIBRATION": 60,
+      "PAPER": 360
+    },
+    "expected_rows_by_model": {
+      "BallDrop": 140,
+      "BounceBall": 140,
+      "MassSlide": 140
+    },
+    "expected_models": [
+      "BallDrop",
+      "BounceBall",
+      "MassSlide"
+    ],
+    "expected_questions_by_model": {
+      "BallDrop": 315,
+      "BounceBall": 315,
+      "MassSlide": 315
+    }
+  },
+  "runtime": {
+    "python": "3.12"
+  },
+  "smoke_test": {
+    "model": "BallDrop",
+    "question_slug": "frost_01234-anchor_0",
+    "agent_id": "gpt_5_5_codex_high"
+  }
+}

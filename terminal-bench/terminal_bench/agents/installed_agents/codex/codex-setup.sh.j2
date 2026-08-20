@@ -1,0 +1,27 @@
+#!/bin/bash
+
+apt-get update
+apt-get install -y curl
+
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+
+source "$HOME/.nvm/nvm.sh"
+
+nvm install 22
+npm -v
+
+{% if installation_command %}
+{{ installation_command }}
+{% else %}
+npm install -g @openai/codex@{{ version }}
+{% endif %}
+
+if [ -z "$OPENAI_API_KEY" ]; then
+  echo "No Codex API key provided (expected OPENAI_API_KEY)." >&2
+  exit 1
+fi
+
+if ! printf '%s' "$OPENAI_API_KEY" | codex login --with-api-key; then
+  echo "Codex API-key login failed." >&2
+  exit 1
+fi

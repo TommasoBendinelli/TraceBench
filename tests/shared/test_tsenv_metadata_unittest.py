@@ -161,6 +161,106 @@ def test_none_description_labels_map_to_display_sorted_class_labels(
     ) == "class_2"
 
 
+@pytest.mark.parametrize(
+    "model,version,display_labels,internal_label,expected_display,expected_index",
+    [
+        (
+            "BallDrop",
+            8,
+            ["coefficient of restitution", "mass", "drag coefficient", "gravity acceleration", "no parameter change"],
+            "drag_coeff",
+            "drag coefficient",
+            2,
+        ),
+        (
+            "BounceBall",
+            11,
+            [
+                "coefficient of restitution of the left wall",
+                "coefficient of restitution of the right wall",
+                "coefficient of viscous damping",
+                "inclination angle of the rail",
+                "weight of the mass",
+                "no parameter change",
+            ],
+            "restitution_left",
+            "coefficient of restitution of the left wall",
+            0,
+        ),
+        (
+            "MassSlide",
+            8,
+            [
+                "Coulomb friction coefficient",
+                "breakaway friction coefficient",
+                "gravity acceleration",
+                "plane inclination angle",
+                "no parameter change",
+            ],
+            "coulomb_friction_coefficient",
+            "Coulomb friction coefficient",
+            0,
+        ),
+    ],
+)
+def test_released_question_labels_resolve_without_private_model_files(
+    model: str,
+    version: int,
+    display_labels: list[str],
+    internal_label: str,
+    expected_display: str,
+    expected_index: int,
+) -> None:
+    payload = {
+        "version": version,
+        "environment_name": model,
+        "label_int_mapping": {
+            label: index for index, label in enumerate(display_labels)
+        },
+        "ground_truth_information": {
+            "interventions": {"sample": {"changed_parameter": internal_label}}
+        },
+    }
+    question = {
+        "recipe_info": {"desc_level": "high"},
+        "question_text": {"allowed_labels": display_labels},
+    }
+    assert label_for_question_sample(
+        payload,
+        question=question,
+        sample_path="dataframes/sample.parquet",
+    ) == expected_display
+
+    question["recipe_info"]["desc_level"] = "none"
+    question["question_text"]["allowed_labels"] = [
+        f"label_{index}" for index in range(len(display_labels))
+    ]
+    assert label_for_question_sample(
+        payload,
+        question=question,
+        sample_path="dataframes/sample.parquet",
+    ) == f"label_{expected_index}"
+
+
+def test_ground_truth_label_must_be_in_question_choices() -> None:
+    payload = {
+        "environment_name": "UnknownModel",
+        "ground_truth_information": {
+            "interventions": {"sample": {"changed_parameter": "drag_coeff"}}
+        },
+    }
+    question = {
+        "recipe_info": {"desc_level": "high"},
+        "question_text": {"allowed_labels": ["drag coefficient"]},
+    }
+    with pytest.raises(ValueError, match="is not among"):
+        label_for_question_sample(
+            payload,
+            question=question,
+            sample_path="dataframes/sample.parquet",
+        )
+
+
 def test_load_metadata_payload_derives_other_samples_for_legacy_manifest(tmp_path: Path) -> None:
     model_dir = tmp_path / "BallDrop"
     dataframes_dir = model_dir / "dataframes"

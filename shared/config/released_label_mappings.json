@@ -1,0 +1,29 @@
+{
+  "dataset_revision": "ec08d06b0731315a188bc723e668ab68234da029",
+  "questions_versions": {
+    "BallDrop": 8,
+    "BounceBall": 11,
+    "MassSlide": 8
+  },
+  "parameter_display_mappings": {
+    "BallDrop": {
+      "mass": "mass",
+      "drag_coeff": "drag coefficient",
+      "restitution": "coefficient of restitution",
+      "gravity": "gravity acceleration"
+    },
+    "BounceBall": {
+      "mass": "weight of the mass",
+      "viscous_damping": "coefficient of viscous damping",
+      "restitution_right": "coefficient of restitution of the right wall",
+      "restitution_left": "coefficient of restitution of the left wall",
+      "inclination_angle": "inclination angle of the rail"
+    },
+    "MassSlide": {
+      "gravity_constant": "gravity acceleration",
+      "plane_inclination": "plane inclination angle",
+      "coulomb_friction_coefficient": "Coulomb friction coefficient",
+      "breakaway_friction_coefficient": "breakaway friction coefficient"
+    }
+  }
+}

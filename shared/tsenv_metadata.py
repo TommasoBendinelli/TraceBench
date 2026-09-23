@@ -10,6 +10,10 @@ from shared.interface.sample_manifest_json import (
     validate_sample_manifest_payload,
 )
 from shared.model_intervention_interface import load_allowed_interventions
+from shared.released_label_metadata import (
+    released_parameter_display_mapping,
+    released_questions_version,
+)
 from shared.run_artifacts import QUESTIONS_FILENAME, SAMPLE_MANIFEST_FILENAME
 from shared.tsenv_combinations import (
     TIME0_BASELINE_AGENT_FACING_LABEL,
@@ -168,6 +172,13 @@ def _load_parameter_display_mapping_from_model(payload: Mapping[str, Any]) -> Di
     }
 
 
+def _released_parameter_display_mapping(payload: Mapping[str, Any]) -> Dict[str, str]:
+    environment_name = str(payload.get("environment_name") or "")
+    if payload.get("version") != released_questions_version(environment_name):
+        return {}
+    return released_parameter_display_mapping(environment_name)
+
+
 def _parameter_display_mapping(payload: Mapping[str, Any]) -> Dict[str, str]:
     ground_truth_information = payload.get("ground_truth_information")
     if isinstance(ground_truth_information, Mapping):
@@ -185,7 +196,7 @@ def _parameter_display_mapping(payload: Mapping[str, Any]) -> Dict[str, str]:
             for key, value in cached.items()
             if str(key).strip() and str(value).strip()
         }
-    return _load_parameter_display_mapping_from_model(payload)
+    return _load_parameter_display_mapping_from_model(payload) or _released_parameter_display_mapping(payload)
 
 
 def _label_agnostic_choices(
@@ -232,6 +243,35 @@ def _label_agnostic_internal_order(payload: Mapping[str, Any]) -> List[str]:
     environment_name = str(payload.get("environment_name") or "").strip()
     if not environment_name:
         return []
+    parameter_display_mapping = _parameter_display_mapping(payload)
+    label_int_mapping = payload.get("label_int_mapping")
+    if parameter_display_mapping and isinstance(label_int_mapping, Mapping):
+        internal_by_display = {
+            display: internal for internal, display in parameter_display_mapping.items()
+        }
+        if len(internal_by_display) == len(parameter_display_mapping):
+            try:
+                indices = {label: int(index) for label, index in label_int_mapping.items()}
+                ordered_displays = sorted(
+                    indices,
+                    key=indices.__getitem__,
+                )
+            except (TypeError, ValueError):
+                indices = {}
+                ordered_displays = []
+            internal_order = [
+                TIME0_BASELINE_LABEL
+                if display == TIME0_BASELINE_AGENT_FACING_LABEL
+                else internal_by_display.get(str(display))
+                for display in ordered_displays
+            ]
+            if (
+                len(internal_order) == len(parameter_display_mapping) + 1
+                and sorted(indices.values()) == list(range(len(internal_order)))
+                and all(internal_order)
+                and len(set(internal_order)) == len(internal_order)
+            ):
+                return [str(label) for label in internal_order]
     try:
         labels = load_allowed_interventions(
             model_id=environment_name,
@@ -239,7 +279,6 @@ def _label_agnostic_internal_order(payload: Mapping[str, Any]) -> List[str]:
         )
     except Exception:
         return []
-    parameter_display_mapping = _parameter_display_mapping(payload)
     ordered_labels = sorted(
         (label for label in labels if str(label).strip()),
         key=lambda label: str(parameter_display_mapping.get(label, label)).strip(),
@@ -363,11 +402,22 @@ def label_for_question_sample(
         if internal_label in internal_order:
             idx = internal_order.index(internal_label)
             if idx < len(label_choices):
-                return label_choices[idx]
-        return internal_label
-    if internal_label == TIME0_BASELINE_LABEL:
-        return TIME0_BASELINE_AGENT_FACING_LABEL
-    return _parameter_display_mapping(payload).get(internal_label, internal_label)
+                label = label_choices[idx]
+            else:
+                label = internal_label
+        else:
+            label = internal_label
+    elif internal_label == TIME0_BASELINE_LABEL:
+        label = TIME0_BASELINE_AGENT_FACING_LABEL
+    else:
+        label = _parameter_display_mapping(payload).get(internal_label, internal_label)
+    allowed_labels = _label_agnostic_choices(payload, question)
+    if allowed_labels and label not in allowed_labels:
+        raise ValueError(
+            f"Ground-truth label {label!r} for sample {sample_path!r} is not among "
+            f"the question's allowed labels {allowed_labels!r}."
+        )
+    return label
 
 
 def ground_truth_by_path_from_payload(payload: Mapping[str, Any]) -> Dict[str, str]:

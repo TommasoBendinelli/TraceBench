@@ -58,6 +58,7 @@ packages = [
 [tool.setuptools.package-data]
 shared = [
     "config/agents.json",
+    "config/released_label_mappings.json",
     "platform.json",
     "schemas/experiment_config.schema.json",
     "schemas/model_record.schema.json",

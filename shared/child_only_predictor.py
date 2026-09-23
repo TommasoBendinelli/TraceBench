@@ -9,6 +9,7 @@ from shared.child_only_cli_utils import normalize_run_id
 from shared.child_only_physics_inference import infer_changed_parameter_child_only
 from shared.model_noise_adder import apply_model_noise_profile, normalize_noise_profile
 from shared.model_intervention_interface import load_allowed_interventions
+from shared.released_label_metadata import released_parameter_display_mapping
 from shared.tsenv_combinations import TIME0_BASELINE_AGENT_FACING_LABEL
 
 _NO_CHANGE_KEYS = {"no_parameter_change", "nothing_happened"}
@@ -43,6 +44,8 @@ def _load_agent_facing_parameter_map(
     resolved_models_root = _resolve_models_root(models_root)
     path = resolved_models_root / str(model_id) / "description_levels.json"
     if not path.exists():
+        if resolved_models_root == _resolve_models_root(None):
+            return released_parameter_display_mapping(model_id)
         return {}
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))

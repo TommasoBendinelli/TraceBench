@@ -60,20 +60,27 @@ def _validate_noise_adder_module(module: ModuleType, *, source: Path) -> Callabl
         raise TypeError(
             f"noise_adder.py at {source} does not export quantify_noise(clean, noisy, baseline)."
         )
-    if list(inspect.signature(quantify_noise).parameters) != ["clean", "noisy", "reference"]:
+    if list(inspect.signature(quantify_noise).parameters) not in (
+        ["clean", "noisy", "reference"],
+        ["clean", "noisy", "baseline"],
+    ):
         raise TypeError(
             f"noise_adder.py at {source} quantify_noise must have "
-            "(clean, noisy, reference)."
+            "(clean, noisy, reference) or (clean, noisy, baseline)."
         )
     add_noise = getattr(module, "add_noise", None)
     if not callable(add_noise):
         raise TypeError(
             f"noise_adder.py at {source} does not export add_noise(src, seed, noise_level, ref)."
         )
-    if list(inspect.signature(add_noise).parameters) != ["src", "seed", "noise_level", "ref"]:
+    if list(inspect.signature(add_noise).parameters) not in (
+        ["src", "seed", "noise_level", "ref"],
+        ["clean", "baseline", "seed", "noise_level"],
+    ):
         raise TypeError(
             f"noise_adder.py at {source} add_noise must have "
-            "(src, seed, noise_level, ref)."
+            "(src, seed, noise_level, ref) or "
+            "(clean, baseline, seed, noise_level)."
         )
     return add_noise
 
@@ -111,12 +118,23 @@ def call_noise_adder(
     seed: int,
     noise_level: str,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
-    result = add_noise(
-        df.copy(),
-        seed=int(seed),
-        noise_level=str(noise_level),
-        ref=baseline_df.copy() if hasattr(baseline_df, "copy") else baseline_df,
-    )
+    reference = baseline_df.copy() if hasattr(baseline_df, "copy") else baseline_df
+    if list(inspect.signature(add_noise).parameters) == [
+        "clean", "baseline", "seed", "noise_level"
+    ]:
+        result = add_noise(
+            df.copy(),
+            baseline=reference,
+            seed=int(seed),
+            noise_level=str(noise_level),
+        )
+    else:
+        result = add_noise(
+            df.copy(),
+            seed=int(seed),
+            noise_level=str(noise_level),
+            ref=reference,
+        )
     if not isinstance(result, tuple) or len(result) != 2:
         raise TypeError(
             "noise_adder.add_noise must return (pandas.DataFrame, noise_analysis)."

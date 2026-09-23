@@ -59,6 +59,23 @@ BASELINE_AWARE_NOISE_ADDER = "\n".join(
         "    return out, quantify_noise(src, out, ref)",
     ]
 )
+RELEASE_NOISE_ADDER = "\n".join(
+    [
+        "NOISE_DICT = {'low': {}, 'high': {}}",
+        "SNR_THR_DICT = {",
+        "    'low': {'global': [0.0], 'local': [0.0]},",
+        "    'high': {'global': [0.0], 'local': [0.0]},",
+        "}",
+        "",
+        "def quantify_noise(clean, noisy, baseline):",
+        "    return {'global': [float(clean.iloc[0, 0])], 'local': [float(baseline.iloc[0, 0])]}",
+        "",
+        "def add_noise(clean, baseline, seed=0, noise_level='low'):",
+        "    out = clean.copy()",
+        "    out.iloc[:, 0] += float(baseline.iloc[0, 0]) + float(seed)",
+        "    return out, quantify_noise(clean, out, baseline)",
+    ]
+)
 
 
 def _write_text(path: Path, content: str) -> None:
@@ -137,6 +154,24 @@ def test_materialize_passes_documented_baseline_dataframe_from_manifest(
     assert list(out.columns) == ["col1", "col2"]
     assert float(out["col1"].iloc[0]) == pytest.approx(102.0)
     assert noise_analysis == {"global": [2.0], "local": [100.0]}
+
+
+def test_materialize_accepts_pinned_release_noise_adder_interface(tmp_path: Path) -> None:
+    model_root = tmp_path / "questions" / "BallDrop"
+    _write_value_parquet(model_root / "dataframes" / "child.parquet", 2.0)
+    _write_value_parquet(model_root / "dataframes" / "baseline.parquet", 10.0)
+    _write_text(model_root / "noise_adder.py", RELEASE_NOISE_ADDER)
+
+    out, noise_analysis = materialize(
+        "child",
+        "low",
+        3,
+        tsenv_model_root=model_root,
+        uuid_baseline_path="dataframes/baseline.parquet",
+    )
+
+    assert float(out["col1"].iloc[0]) == pytest.approx(15.0)
+    assert noise_analysis == {"global": [2.0], "local": [10.0]}
 
 
 def test_materialize_passes_explicit_uuid_baseline_path(tmp_path: Path) -> None:
